@@ -11,7 +11,9 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 
+	jwtware "github.com/gofiber/contrib/jwt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -43,8 +45,11 @@ func main() {
 	userHandler := handler.NewUserHandler(userService)
 
 	app := fiber.New()
-	route.PostRoute(app, postHandler)
+	app.Use(cors.New(cors.Config{AllowOrigins: "*"}))
 	route.UserRoute(app, userHandler)
-
+	app.Use(jwtware.New(jwtware.Config{
+		SigningKey: jwtware.SigningKey{Key: []byte(config.GetConf().Secret)},
+	}))
+	route.PostRoute(app, postHandler)
 	log.Fatal(app.Listen(":5000"))
 }

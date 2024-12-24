@@ -10,10 +10,10 @@ import (
 type PostRepository interface {
 	Create(ctx context.Context, post model.Post) (model.Post, error)
 	GetAll(ctx context.Context) ([]model.Post, error)
-	GetByID(ctx context.Context, id uint) (model.Post, error)
+	GetByID(ctx context.Context, id int) (model.Post, error)
 	Update(ctx context.Context, post model.Post) (model.Post, error)
-	UpdateUserPostCount(ctx context.Context, id uint) error
-	Delete(ctx context.Context, id uint) error
+	UpdateUserPostCount(ctx context.Context, id int) error
+	Delete(ctx context.Context, id int) error
 }
 
 type PostgresPostRespository struct {
@@ -35,7 +35,7 @@ func (r *PostgresPostRespository) GetAll(ctx context.Context) ([]model.Post, err
 	return posts, nil
 }
 
-func (r *PostgresPostRespository) GetByID(ctx context.Context, id uint) (model.Post, error) {
+func (r *PostgresPostRespository) GetByID(ctx context.Context, id int) (model.Post, error) {
 	var post model.Post
 	if err := r.Db.WithContext(ctx).First(&post, id).Error; err != nil {
 		return model.Post{}, err
@@ -50,14 +50,14 @@ func (r *PostgresPostRespository) Update(ctx context.Context, post model.Post) (
 	return post, nil
 }
 
-func (r *PostgresPostRespository) Delete(ctx context.Context, id uint) error {
+func (r *PostgresPostRespository) Delete(ctx context.Context, id int) error {
 	if err := r.Db.WithContext(ctx).Delete(&model.Post{}, id).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *PostgresPostRespository) UpdateUserPostCount(ctx context.Context, userID uint) error {
+func (r *PostgresPostRespository) UpdateUserPostCount(ctx context.Context, userID int) error {
 	return r.Db.WithContext(ctx).Model(&model.User{}).
 		Where("id = ?", userID).
 		Update("post", gorm.Expr("post + ?", 1)).Error

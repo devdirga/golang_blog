@@ -1,11 +1,14 @@
 package handler
 
 import (
+	"fmt"
 	"goblog/model"
 	"goblog/service"
 	"goblog/util"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type PostHandler struct {
@@ -17,10 +20,20 @@ func NewPostHandler(postService service.PostService) *PostHandler {
 }
 
 func (h *PostHandler) CreatePost(c *fiber.Ctx) error {
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	id := claims["id"].(string)
+
+	fmt.Println("ID user>>>", id)
+
 	var post model.Post
 	if err := c.BodyParser(&post); err != nil {
 		return util.HandleError(c, fiber.StatusBadRequest, "invalid input")
 	}
+
+	vid, _ := strconv.Atoi(id)
+	post.Author = vid
+
 	createdPost, err := h.postService.CreatePostWithUpdateUser(c.Context(), post)
 	if err != nil {
 		return util.HandleError(c, fiber.StatusInternalServerError, "cannot create post")
@@ -42,7 +55,7 @@ func (h *PostHandler) GetBlogByID(c *fiber.Ctx) error {
 		return util.HandleError(c, fiber.StatusBadRequest, "invalid id")
 
 	}
-	post, err := h.postService.GetPostByID(c.Context(), uint(id))
+	post, err := h.postService.GetPostByID(c.Context(), id)
 	if err != nil {
 		return util.HandleError(c, fiber.StatusInternalServerError, "post not found")
 	}
@@ -58,7 +71,7 @@ func (h *PostHandler) UpdatePost(c *fiber.Ctx) error {
 	if err := c.BodyParser(&post); err != nil {
 		return util.HandleError(c, fiber.StatusBadRequest, "invalid body")
 	}
-	post.ID = uint(id)
+	post.ID = id
 	updatedBlog, err := h.postService.UpdatePost(c.Context(), post)
 	if err != nil {
 		return util.HandleError(c, fiber.StatusInternalServerError, "post not found")
@@ -71,7 +84,7 @@ func (h *PostHandler) DeleteBlog(c *fiber.Ctx) error {
 	if err != nil {
 		return util.HandleError(c, fiber.StatusBadRequest, "invalid id")
 	}
-	if err := h.postService.DeletePost(c.Context(), uint(id)); err != nil {
+	if err := h.postService.DeletePost(c.Context(), id); err != nil {
 		return util.HandleError(c, fiber.StatusInternalServerError, "post not found")
 	}
 	return c.SendStatus(fiber.StatusNoContent)

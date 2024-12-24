@@ -14,9 +14,9 @@ type PostService interface {
 	CreatePostWithUpdateUser(ctx context.Context, post model.Post) (model.Post, error)
 	// CreatePost(ctx context.Context, post model.Post) (model.Post, error)
 	GetAllPosts(ctx context.Context) ([]model.Post, error)
-	GetPostByID(ctx context.Context, id uint) (model.Post, error)
+	GetPostByID(ctx context.Context, id int) (model.Post, error)
 	UpdatePost(ctx context.Context, post model.Post) (model.Post, error)
-	DeletePost(ctx context.Context, id uint) error
+	DeletePost(ctx context.Context, id int) error
 }
 
 type PostServiceImpl struct {
@@ -57,7 +57,7 @@ func (s *PostServiceImpl) GetAllPosts(ctx context.Context) ([]model.Post, error)
 	return s.Repo.GetAll(ctx)
 }
 
-func (s *PostServiceImpl) GetPostByID(ctx context.Context, id uint) (model.Post, error) {
+func (s *PostServiceImpl) GetPostByID(ctx context.Context, id int) (model.Post, error) {
 	cacheKey := fmt.Sprintf("blogpost:%d", id)
 	cachedPost, err := s.RedisClient.Get(ctx, cacheKey).Result()
 	if err == nil {
@@ -85,6 +85,6 @@ func (s *PostServiceImpl) UpdatePost(ctx context.Context, post model.Post) (mode
 	return s.Repo.Update(ctx, post)
 }
 
-func (s *PostServiceImpl) DeletePost(ctx context.Context, id uint) error {
+func (s *PostServiceImpl) DeletePost(ctx context.Context, id int) error {
 	return s.Repo.Delete(ctx, id)
 }
