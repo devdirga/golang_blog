@@ -16,8 +16,10 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/stretchr/testify/assert"
 
+	jwtware "github.com/gofiber/contrib/jwt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -49,34 +51,112 @@ func setupTestApp() *fiber.App {
 	userHandler := handler.NewUserHandler(userService)
 
 	app := fiber.New()
-	route.PostRoute(app, postHandler)
+	app.Use(cors.New(cors.Config{AllowOrigins: "*"}))
 	route.UserRoute(app, userHandler)
+	route.PublicRoute(app, postHandler)
+	app.Use(jwtware.New(jwtware.Config{
+		SigningKey: jwtware.SigningKey{Key: []byte(config.GetConf().Secret)},
+	}))
+	route.PostRoute(app, postHandler)
+	route.InfoRoute(app, userHandler)
 
 	return app
 }
 
-func TestUserCreate(t *testing.T) {
+func TestSignup(t *testing.T) {
 	app := setupTestApp()
 	user := model.User{
-		Name: "ahmad20",
-		Post: 0,
+		Name:     "ahmad",
+		Username: "ahmad@gmail.com",
+		Password: "admin123",
 	}
 	body, _ := json.Marshal(user)
-	req := httptest.NewRequest(http.MethodPost, "/user", bytes.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/signup", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	resp, _ := app.Test(req)
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+}
+
+func TestSignin(t *testing.T) {
+	app := setupTestApp()
+	post := model.User{
+		Username: "ahmad@gmail.com",
+		Password: "admin123",
+	}
+	body, _ := json.Marshal(post)
+	req := httptest.NewRequest(http.MethodPost, "/signin", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	resp, _ := app.Test(req)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+}
+
+func TestMe(t *testing.T) {
+	app := setupTestApp()
+	req := httptest.NewRequest(http.MethodGet, "/me", nil)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRpcmdhQGdtYWlsLmNvbSIsImV4cCI6MTc2NjE1Mzk1MiwiaWQiOiIxIiwibmFtZSI6IkRpcmdhIn0.CKkmy5UvlVEOtE-xh9UgfeWVNosBlTf8YX5z8M76VgI")
+	resp, _ := app.Test(req)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestPostGets(t *testing.T) {
+	app := setupTestApp()
+	req := httptest.NewRequest(http.MethodGet, "/post", nil)
+	req.Header.Set("Content-Type", "application/json")
+	resp, _ := app.Test(req)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestPostGet(t *testing.T) {
+	app := setupTestApp()
+	req := httptest.NewRequest(http.MethodPatch, "/post/10", nil)
+	req.Header.Set("Content-Type", "application/json")
+	resp, _ := app.Test(req)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestPostGetsAdmin(t *testing.T) {
+	app := setupTestApp()
+	req := httptest.NewRequest(http.MethodGet, "/admin/post", nil)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRpcmdhQGdtYWlsLmNvbSIsImV4cCI6MTc2NjE1Mzk1MiwiaWQiOiIxIiwibmFtZSI6IkRpcmdhIn0.CKkmy5UvlVEOtE-xh9UgfeWVNosBlTf8YX5z8M76VgI")
+	resp, _ := app.Test(req)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
 func TestPostCreate(t *testing.T) {
 	app := setupTestApp()
 	post := model.Post{
-		Title:   "new post",
-		Content: "New post content",
+		Title:   "Post title",
+		Content: "Post Content",
 	}
 	body, _ := json.Marshal(post)
 	req := httptest.NewRequest(http.MethodPost, "/post", bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRpcmdhQGdtYWlsLmNvbSIsImV4cCI6MTc2NjE1Mzk1MiwiaWQiOiIxIiwibmFtZSI6IkRpcmdhIn0.CKkmy5UvlVEOtE-xh9UgfeWVNosBlTf8YX5z8M76VgI")
 	req.Header.Set("Content-Type", "application/json")
 	resp, _ := app.Test(req)
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+}
+
+func TestPostUpdate(t *testing.T) {
+	app := setupTestApp()
+	post := model.Post{
+		Title:   "Post title",
+		Content: "Post ContentX",
+	}
+	body, _ := json.Marshal(post)
+	req := httptest.NewRequest(http.MethodPut, "/post/10", bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRpcmdhQGdtYWlsLmNvbSIsImV4cCI6MTc2NjE1Mzk1MiwiaWQiOiIxIiwibmFtZSI6IkRpcmdhIn0.CKkmy5UvlVEOtE-xh9UgfeWVNosBlTf8YX5z8M76VgI")
+	req.Header.Set("Content-Type", "application/json")
+	resp, _ := app.Test(req)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestPostDelete(t *testing.T) {
+	app := setupTestApp()
+	req := httptest.NewRequest(http.MethodDelete, "/post/8", nil)
+	req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRpcmdhQGdtYWlsLmNvbSIsImV4cCI6MTc2NjE1Mzk1MiwiaWQiOiIxIiwibmFtZSI6IkRpcmdhIn0.CKkmy5UvlVEOtE-xh9UgfeWVNosBlTf8YX5z8M76VgI")
+	req.Header.Set("Content-Type", "application/json")
+	resp, _ := app.Test(req)
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 }

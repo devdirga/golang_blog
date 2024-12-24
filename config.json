@@ -1,6 +1,7 @@
 {
   "DB": "host=localhost port=5432 user=postgres password=mysecretpassword dbname=tinder sslmode=disable",
-  "Redis": "localhost:6379",
+  "Redis": "redis-10534.c278.us-east-1-4.ec2.redns.redis-cloud.com:10534",
+  "RedisPassword":"55t66s1x67yWQ2Kgz8Erb51fJAmCXKzZ",
   "IsDebug": true,
   "IsConcurrent":true,
   "Secret": "secret",

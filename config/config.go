@@ -9,6 +9,7 @@ import (
 type Conf struct {
 	DB            string
 	Redis         string
+	RedisPassword string
 	IsDebug       bool
 	IsConcurrent  bool
 	Secret        string

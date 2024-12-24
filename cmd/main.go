@@ -29,7 +29,7 @@ func main() {
 	}
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     config.GetConf().Redis,
-		Password: "",
+		Password: config.GetConf().RedisPassword,
 		DB:       0,
 	})
 	defer rdb.Close()
