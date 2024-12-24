@@ -86,9 +86,15 @@ The service will run on `http://localhost:5000` by default.
 ### Alasan penggunaan pattern
 
 **-Modular**, Dengan memisahkan setiap lapisan aplikasi (handler, service, repository, dll.), kita dapat menambahkan fitur baru atau mengubah logika tanpa mengganggu bagian lain dari aplikasi
+
 **-Clean Architecture**, Layer-layer seperti /service/ untuk logika bisnis dan /repository/ untuk akses database mencerminkan prinsip Clean Architecture atau Hexagonal Architecture, yang membuat kode lebih bersih dan mudah diuji
+
 **-Testability**, Layer service dapat diuji dengan mengganti dependency repository menggunakan mock.
+
 **-Penerapan Prinsip SOLID**
+
 **-Kemudahan Maintenance dan Kolaborasi Tim**
+
 Pemahaman Kode yang Mudah,Dengan struktur folder yang jelas, anggota tim baru dapat dengan cepat memahami tanggung jawab setiap bagian aplikasi.
+
 Perubahan yang Aman, Karena kode terpisah dengan baik, perubahan di satu bagian kecil (misalnya, di repository) tidak memengaruhi bagian lain.
