@@ -68,3 +68,20 @@ func (h *UserHandler) Me(c *fiber.Ctx) error {
 	}
 	return c.Status(fiber.StatusOK).JSON(us)
 }
+
+func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	authorID, _ := strconv.Atoi(claims["id"].(string))
+
+	var u model.User
+	if err := c.BodyParser(&u); err != nil {
+		return util.HandleError(c, fiber.StatusBadRequest, "invalid input")
+	}
+	u.ID = authorID
+	us, err := h.userService.UpdateProfile(c.Context(), u)
+	if err != nil {
+		return util.HandleError(c, fiber.StatusInternalServerError, err.Error())
+	}
+	return c.Status(fiber.StatusOK).JSON(us)
+}

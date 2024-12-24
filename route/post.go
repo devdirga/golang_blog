@@ -9,7 +9,7 @@ import (
 func PostRoute(app *fiber.App, postHandler *handler.PostHandler) {
 	app.Get("/admin/post", postHandler.GetAllPostsAdmin)
 	app.Post("/post", postHandler.CreatePost)
-	app.Patch("/post/:id", postHandler.GetBlogByID)
+	app.Get("/post/:id", postHandler.GetBlogByID)
 	app.Put("post/:id", postHandler.UpdatePost)
 	app.Delete("/post/:id", postHandler.DeleteBlog)
 }

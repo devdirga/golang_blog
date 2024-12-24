@@ -19,6 +19,7 @@ type UserRepository interface {
 	Signin(ctx context.Context, post model.User) (model.User, error)
 	Google(ctx context.Context, post model.User) (model.User, error)
 	Me(ctx context.Context, post model.User) (model.User, error)
+	UpdateProfile(ctx context.Context, user model.User) (model.User, error)
 }
 
 type PostgresUserRespository struct {
@@ -78,6 +79,21 @@ func (r *PostgresUserRespository) Google(ctx context.Context, user model.User) (
 func (r *PostgresUserRespository) Me(ctx context.Context, user model.User) (model.User, error) {
 	var u model.User
 	if err := r.Db.WithContext(ctx).Where("id=?", user.ID).Find(&u).Error; err != nil {
+		return model.User{}, err
+	}
+	return u, nil
+}
+
+func (r *PostgresUserRespository) UpdateProfile(ctx context.Context, user model.User) (model.User, error) {
+	var u model.User
+	if err := r.Db.WithContext(ctx).Where("id=?", user.ID).Find(&u).Error; err != nil {
+		return model.User{}, err
+	}
+	if u.ID == 0 {
+		return model.User{}, errors.New("post not fount")
+	}
+	u.Name = user.Name
+	if err := r.Db.WithContext(ctx).Save(&u).Error; err != nil {
 		return model.User{}, err
 	}
 	return u, nil

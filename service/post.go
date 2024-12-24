@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"goblog/model"
 	"goblog/repository"
@@ -58,7 +59,7 @@ func (s *PostServiceImpl) GetPostByID(ctx context.Context, id int) (model.Post, 
 	cacheKey := fmt.Sprintf("blogpost:%d", id)
 	cachedPost, err := s.RedisClient.Get(ctx, cacheKey).Result()
 	if err == nil {
-		fmt.Print("From cache....")
+		fmt.Println("From cache....")
 		var post model.Post
 		if json.Unmarshal([]byte(cachedPost), &post) == nil {
 			return post, nil
@@ -68,16 +69,34 @@ func (s *PostServiceImpl) GetPostByID(ctx context.Context, id int) (model.Post, 
 	if err != nil {
 		return model.Post{}, err
 	}
-	fmt.Print("From Database....")
+	fmt.Println("From Database....")
 	postBytes, _ := json.Marshal(post)
 	s.RedisClient.Set(ctx, cacheKey, postBytes, 0)
 	return post, nil
 }
 
 func (s *PostServiceImpl) UpdatePost(ctx context.Context, post model.Post) (model.Post, error) {
+
+	cacheKey := fmt.Sprintf("blogpost:%d", post.ID)
+	_, err := s.RedisClient.Get(ctx, cacheKey).Result()
+	if err == nil {
+		if delErr := s.RedisClient.Del(ctx, cacheKey).Err(); delErr != nil {
+			return model.Post{}, errors.New("error delete cache")
+		}
+	}
+
 	return s.Repo.Update(ctx, post)
 }
 
 func (s *PostServiceImpl) DeletePost(ctx context.Context, id, author int) error {
+
+	cacheKey := fmt.Sprintf("blogpost:%d", id)
+	_, err := s.RedisClient.Get(ctx, cacheKey).Result()
+	if err == nil {
+		if delErr := s.RedisClient.Del(ctx, cacheKey).Err(); delErr != nil {
+			return errors.New("error delete cache")
+		}
+	}
+
 	return s.Repo.Delete(ctx, id, author)
 }

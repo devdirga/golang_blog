@@ -8,5 +8,5 @@ import (
 
 func PublicRoute(app *fiber.App, postHandler *handler.PostHandler) {
 	app.Get("/post", postHandler.GetAllPosts)
-	app.Patch("/post/:id", postHandler.GetBlogByID)
+	app.Get("/post/:id", postHandler.GetBlogByID)
 }

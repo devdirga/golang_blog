@@ -8,4 +8,5 @@ import (
 
 func InfoRoute(app *fiber.App, userHandler *handler.UserHandler) {
 	app.Get("/me", userHandler.Me)
+	app.Patch("/updateprofile", userHandler.UpdateProfile)
 }
