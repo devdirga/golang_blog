@@ -1,0 +1,9 @@
+{
+  "DB": "host=localhost port=5432 user=postgres password=mysecretpassword dbname=tinder sslmode=disable",
+  "Redis": "localhost:6379",
+  "IsDebug": true,
+  "IsConcurrent":true,
+  "Secret": "secret",
+  "GoogleSmtpKey": "azdg rkiv wnqe vuil ",
+  "URLFront": "http://localhost:3000/"
+}
