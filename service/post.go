@@ -12,11 +12,11 @@ import (
 
 type PostService interface {
 	CreatePostWithUpdateUser(ctx context.Context, post model.Post) (model.Post, error)
-	// CreatePost(ctx context.Context, post model.Post) (model.Post, error)
 	GetAllPosts(ctx context.Context) ([]model.Post, error)
+	GetAllPostsAdmin(ctx context.Context, author int) ([]model.Post, error)
 	GetPostByID(ctx context.Context, id int) (model.Post, error)
 	UpdatePost(ctx context.Context, post model.Post) (model.Post, error)
-	DeletePost(ctx context.Context, id int) error
+	DeletePost(ctx context.Context, id int, author int) error
 }
 
 type PostServiceImpl struct {
@@ -36,25 +36,22 @@ func (s *PostServiceImpl) CreatePostWithUpdateUser(ctx context.Context, post mod
 		tx.Rollback()
 		return model.Post{}, err
 	}
-
-	if err := s.Repo.UpdateUserPostCount(ctx, 1); err != nil {
+	if err := s.Repo.UpdateUserPostCount(ctx, post.Author); err != nil {
 		tx.Rollback()
 		return model.Post{}, err
 	}
-
 	if err := tx.Commit().Error; err != nil {
 		return model.Post{}, err
 	}
-
 	return createPost, nil
 }
 
-// func (s *PostServiceImpl) CreatePost(ctx context.Context, post model.Post) (model.Post, error) {
-// 	return s.Repo.Create(ctx, post)
-// }
-
 func (s *PostServiceImpl) GetAllPosts(ctx context.Context) ([]model.Post, error) {
 	return s.Repo.GetAll(ctx)
+}
+
+func (s *PostServiceImpl) GetAllPostsAdmin(ctx context.Context, author int) ([]model.Post, error) {
+	return s.Repo.GetAllAdmin(ctx, author)
 }
 
 func (s *PostServiceImpl) GetPostByID(ctx context.Context, id int) (model.Post, error) {
@@ -67,17 +64,13 @@ func (s *PostServiceImpl) GetPostByID(ctx context.Context, id int) (model.Post, 
 			return post, nil
 		}
 	}
-
 	post, err := s.Repo.GetByID(ctx, id)
 	if err != nil {
 		return model.Post{}, err
 	}
 	fmt.Print("From Database....")
-
-	// Cache the post
 	postBytes, _ := json.Marshal(post)
 	s.RedisClient.Set(ctx, cacheKey, postBytes, 0)
-
 	return post, nil
 }
 
@@ -85,6 +78,6 @@ func (s *PostServiceImpl) UpdatePost(ctx context.Context, post model.Post) (mode
 	return s.Repo.Update(ctx, post)
 }
 
-func (s *PostServiceImpl) DeletePost(ctx context.Context, id int) error {
-	return s.Repo.Delete(ctx, id)
+func (s *PostServiceImpl) DeletePost(ctx context.Context, id, author int) error {
+	return s.Repo.Delete(ctx, id, author)
 }

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"goblog/model"
 
 	"gorm.io/gorm"
@@ -10,10 +11,11 @@ import (
 type PostRepository interface {
 	Create(ctx context.Context, post model.Post) (model.Post, error)
 	GetAll(ctx context.Context) ([]model.Post, error)
+	GetAllAdmin(ctx context.Context, author int) ([]model.Post, error)
 	GetByID(ctx context.Context, id int) (model.Post, error)
 	Update(ctx context.Context, post model.Post) (model.Post, error)
 	UpdateUserPostCount(ctx context.Context, id int) error
-	Delete(ctx context.Context, id int) error
+	Delete(ctx context.Context, id int, author int) error
 }
 
 type PostgresPostRespository struct {
@@ -35,6 +37,14 @@ func (r *PostgresPostRespository) GetAll(ctx context.Context) ([]model.Post, err
 	return posts, nil
 }
 
+func (r *PostgresPostRespository) GetAllAdmin(ctx context.Context, author int) ([]model.Post, error) {
+	var posts []model.Post
+	if err := r.Db.WithContext(ctx).Where("author=?", author).Find(&posts).Error; err != nil {
+		return nil, err
+	}
+	return posts, nil
+}
+
 func (r *PostgresPostRespository) GetByID(ctx context.Context, id int) (model.Post, error) {
 	var post model.Post
 	if err := r.Db.WithContext(ctx).First(&post, id).Error; err != nil {
@@ -44,13 +54,33 @@ func (r *PostgresPostRespository) GetByID(ctx context.Context, id int) (model.Po
 }
 
 func (r *PostgresPostRespository) Update(ctx context.Context, post model.Post) (model.Post, error) {
+	var p model.Post
+	if err := r.Db.WithContext(ctx).Where("id=?", post.ID).Find(&p).Error; err != nil {
+		return model.Post{}, err
+	}
+	if p.ID == 0 {
+		return model.Post{}, errors.New("post not fount")
+	}
+	if p.Author != post.Author {
+		return model.Post{}, errors.New("no authorization")
+	}
 	if err := r.Db.WithContext(ctx).Save(&post).Error; err != nil {
 		return model.Post{}, err
 	}
 	return post, nil
 }
 
-func (r *PostgresPostRespository) Delete(ctx context.Context, id int) error {
+func (r *PostgresPostRespository) Delete(ctx context.Context, id, author int) error {
+	var p model.Post
+	if err := r.Db.WithContext(ctx).Where("id=?", id).Find(&p).Error; err != nil {
+		return err
+	}
+	if p.ID == 0 {
+		return errors.New("post not fount")
+	}
+	if author != p.Author {
+		return errors.New("no authorization")
+	}
 	if err := r.Db.WithContext(ctx).Delete(&model.Post{}, id).Error; err != nil {
 		return err
 	}
@@ -58,7 +88,5 @@ func (r *PostgresPostRespository) Delete(ctx context.Context, id int) error {
 }
 
 func (r *PostgresPostRespository) UpdateUserPostCount(ctx context.Context, userID int) error {
-	return r.Db.WithContext(ctx).Model(&model.User{}).
-		Where("id = ?", userID).
-		Update("post", gorm.Expr("post + ?", 1)).Error
+	return r.Db.WithContext(ctx).Model(&model.User{}).Where("id=?", userID).Update("post", gorm.Expr("post + ?", 1)).Error
 }

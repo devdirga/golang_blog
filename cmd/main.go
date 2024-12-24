@@ -47,9 +47,11 @@ func main() {
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{AllowOrigins: "*"}))
 	route.UserRoute(app, userHandler)
+	route.PublicRoute(app, postHandler)
 	app.Use(jwtware.New(jwtware.Config{
 		SigningKey: jwtware.SigningKey{Key: []byte(config.GetConf().Secret)},
 	}))
 	route.PostRoute(app, postHandler)
+	route.InfoRoute(app, userHandler)
 	log.Fatal(app.Listen(":5000"))
 }

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"goblog/model"
 	"goblog/service"
 	"goblog/util"
@@ -22,21 +21,17 @@ func NewPostHandler(postService service.PostService) *PostHandler {
 func (h *PostHandler) CreatePost(c *fiber.Ctx) error {
 	user := c.Locals("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
-	id := claims["id"].(string)
-
-	fmt.Println("ID user>>>", id)
+	authorID, _ := strconv.Atoi(claims["id"].(string))
 
 	var post model.Post
 	if err := c.BodyParser(&post); err != nil {
 		return util.HandleError(c, fiber.StatusBadRequest, "invalid input")
 	}
 
-	vid, _ := strconv.Atoi(id)
-	post.Author = vid
-
+	post.Author = authorID
 	createdPost, err := h.postService.CreatePostWithUpdateUser(c.Context(), post)
 	if err != nil {
-		return util.HandleError(c, fiber.StatusInternalServerError, "cannot create post")
+		return util.HandleError(c, fiber.StatusInternalServerError, err.Error())
 	}
 	return c.Status(fiber.StatusCreated).JSON(createdPost)
 }
@@ -44,7 +39,19 @@ func (h *PostHandler) CreatePost(c *fiber.Ctx) error {
 func (h *PostHandler) GetAllPosts(c *fiber.Ctx) error {
 	posts, err := h.postService.GetAllPosts(c.Context())
 	if err != nil {
-		return util.HandleError(c, fiber.StatusInternalServerError, "could not fetch posts")
+		return util.HandleError(c, fiber.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(posts)
+}
+
+func (h *PostHandler) GetAllPostsAdmin(c *fiber.Ctx) error {
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	authorID, _ := strconv.Atoi(claims["id"].(string))
+
+	posts, err := h.postService.GetAllPostsAdmin(c.Context(), authorID)
+	if err != nil {
+		return util.HandleError(c, fiber.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(posts)
 }
@@ -53,16 +60,19 @@ func (h *PostHandler) GetBlogByID(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
 	if err != nil {
 		return util.HandleError(c, fiber.StatusBadRequest, "invalid id")
-
 	}
 	post, err := h.postService.GetPostByID(c.Context(), id)
 	if err != nil {
-		return util.HandleError(c, fiber.StatusInternalServerError, "post not found")
+		return util.HandleError(c, fiber.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(post)
 }
 
 func (h *PostHandler) UpdatePost(c *fiber.Ctx) error {
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	authorID, _ := strconv.Atoi(claims["id"].(string))
+
 	id, err := c.ParamsInt("id")
 	if err != nil {
 		return util.HandleError(c, fiber.StatusBadRequest, "invalid id")
@@ -72,20 +82,26 @@ func (h *PostHandler) UpdatePost(c *fiber.Ctx) error {
 		return util.HandleError(c, fiber.StatusBadRequest, "invalid body")
 	}
 	post.ID = id
+	post.Author = authorID
+
 	updatedBlog, err := h.postService.UpdatePost(c.Context(), post)
 	if err != nil {
-		return util.HandleError(c, fiber.StatusInternalServerError, "post not found")
+		return util.HandleError(c, fiber.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(updatedBlog)
 }
 
 func (h *PostHandler) DeleteBlog(c *fiber.Ctx) error {
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	authorID, _ := strconv.Atoi(claims["id"].(string))
+
 	id, err := c.ParamsInt("id")
 	if err != nil {
 		return util.HandleError(c, fiber.StatusBadRequest, "invalid id")
 	}
-	if err := h.postService.DeletePost(c.Context(), id); err != nil {
-		return util.HandleError(c, fiber.StatusInternalServerError, "post not found")
+	if err := h.postService.DeletePost(c.Context(), id, authorID); err != nil {
+		return util.HandleError(c, fiber.StatusInternalServerError, err.Error())
 	}
 	return c.SendStatus(fiber.StatusNoContent)
 }
