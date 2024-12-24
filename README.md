@@ -6,6 +6,7 @@ Handles user registration, login, and session management. Utilizes JWT for secur
 **Endpoints:**
 - `POST /signup`: User registration.
 - `POST /signin`: User login.
+- `POST /google`: User login using google.
 
 ### User Profile (`profile`)
 Manages user profiles, including viewing and editing personal information.
@@ -19,16 +20,9 @@ Implements create, gets, get, update, delete blog post feature, allowing users t
 
 **Endpoints:**
 - `GET /post`: Load all data post.
-
-### Swiping (`swipe`)
-Implements the swiping feature, allowing users to like or pass on other users.
-
-**Endpoints:**
-- `POST /swipe`: Like/Pass a user.
-
-### Matchmaking (`match`)
-Handles the logic for determining matches between users.
-And send email notification
+- `GET /post/:id`: Load one data post.
+- `PUT /post/:id`: Update one data post.
+- `DELETE /post/:id`: Delete one data post.
 
 
 ## Instructions on how to run the service
@@ -37,14 +31,15 @@ And send email notification
 Ensure you have the following installed:
 - **Go** (1.2 or later)
 - **PostgreSQL** (v13 or later)
+- **Redis**
 - **Git**
-- **Docker** (optional, for message queue)
+- **Docker** (optional, for redis)
 
 ## Installation
 
 ### Clone the Repository
 ```bash
-git clone https://github.com/devdirga/tinder-backend.git
+git clone https://github.com/devdirga/golang_blog.git
 cd tinder-service
 ```
 ---
