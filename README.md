@@ -6,20 +6,19 @@ Handles user registration, login, and session management. Utilizes JWT for secur
 **Endpoints:**
 - `POST /signup`: User registration.
 - `POST /signin`: User login.
-- `GET  /verification/:token`: Verification registration.
 
 ### User Profile (`profile`)
 Manages user profiles, including viewing and editing personal information.
 
 **Endpoints:**
 - `GET /me`: Retrieve user profile.
-- `POST /me`: Update user profile.
+- `PATCH /updateprofile`: Update user profile.
 
-### Swipe Data (`swipe`)
-Implements the swiping feature, allowing users to get profile.
+### Blog Post
+Implements create, gets, get, update, delete blog post feature, allowing users to get profile.
 
 **Endpoints:**
-- `GET /swipe`: Load one data profile.
+- `GET /post`: Load all data post.
 
 ### Swiping (`swipe`)
 Implements the swiping feature, allowing users to like or pass on other users.
