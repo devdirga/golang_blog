@@ -1,5 +1,5 @@
 {
-  "DB": "host=localhost port=5432 user=postgres password=mysecretpassword dbname=tinder sslmode=disable",
+  "DB": "postgres://default:Wwo2qJFu4gkt@ep-solitary-fire-a4wfh8bx.us-east-1.aws.neon.tech:5432/verceldb?sslmode=require",
   "Redis": "redis-10534.c278.us-east-1-4.ec2.redns.redis-cloud.com:10534",
   "RedisPassword":"55t66s1x67yWQ2Kgz8Erb51fJAmCXKzZ",
   "IsDebug": true,
