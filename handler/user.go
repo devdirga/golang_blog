@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"goblog/model"
 	"goblog/service"
 	"goblog/util"
@@ -21,6 +22,7 @@ func (h *UserHandler) Create(c *fiber.Ctx) error {
 	if err := c.BodyParser(&user); err != nil {
 		return util.HandleError(c, fiber.StatusBadRequest, "invalid input")
 	}
+	fmt.Println("user body...", user.Name)
 	createdPost, err := h.userService.Create(c.Context(), user)
 	if err != nil {
 		return util.HandleError(c, fiber.StatusInternalServerError, "cannot create post")

@@ -12,7 +12,7 @@ import (
 
 type PostService interface {
 	CreatePostWithUpdateUser(ctx context.Context, post model.Post) (model.Post, error)
-	CreatePost(ctx context.Context, post model.Post) (model.Post, error)
+	// CreatePost(ctx context.Context, post model.Post) (model.Post, error)
 	GetAllPosts(ctx context.Context) ([]model.Post, error)
 	GetPostByID(ctx context.Context, id uint) (model.Post, error)
 	UpdatePost(ctx context.Context, post model.Post) (model.Post, error)
@@ -31,7 +31,7 @@ func (s *PostServiceImpl) CreatePostWithUpdateUser(ctx context.Context, post mod
 			tx.Rollback()
 		}
 	}()
-	_, err := s.Repo.Create(ctx, post)
+	createPost, err := s.Repo.Create(ctx, post)
 	if err != nil {
 		tx.Rollback()
 		return model.Post{}, err
@@ -46,12 +46,12 @@ func (s *PostServiceImpl) CreatePostWithUpdateUser(ctx context.Context, post mod
 		return model.Post{}, err
 	}
 
-	return s.Repo.Create(ctx, post)
+	return createPost, nil
 }
 
-func (s *PostServiceImpl) CreatePost(ctx context.Context, post model.Post) (model.Post, error) {
-	return s.Repo.Create(ctx, post)
-}
+// func (s *PostServiceImpl) CreatePost(ctx context.Context, post model.Post) (model.Post, error) {
+// 	return s.Repo.Create(ctx, post)
+// }
 
 func (s *PostServiceImpl) GetAllPosts(ctx context.Context) ([]model.Post, error) {
 	return s.Repo.GetAll(ctx)
