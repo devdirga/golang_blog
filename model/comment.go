@@ -2,12 +2,12 @@ package model
 
 import "time"
 
-type Post struct {
+type Comment struct {
 	ID        int       `json:"id" gorm:"primaryKey"`
-	Title     string    `json:"title"`
 	Content   string    `json:"content"`
-	Comment   int       `json:"comment" gorm:"not null;default:0"`
-	Author    int       `json:"author"`
+	PostID    int       `json:"post_id" gorm:"not null"`
+	UserID    int       `json:"user_id" gorm:"not null"`
+	IsActive  bool      `json:"is_active" gorm:"not null"`
 	CreatedAt time.Time `json:"created_at" gorm:"not null, default:now()"`
 	UpdatedAt time.Time `json:"Updated_at" gorm:"not null, default:now()"`
 }

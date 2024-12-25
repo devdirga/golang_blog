@@ -15,38 +15,35 @@ import (
 )
 
 type UserRepository interface {
-	Signup(ctx context.Context, post model.User) (model.User, error)
-	Signin(ctx context.Context, post model.User) (model.User, error)
-	Google(ctx context.Context, post model.User) (model.User, error)
-	Me(ctx context.Context, post model.User) (model.User, error)
-	UpdateProfile(ctx context.Context, user model.User) (model.User, error)
+	Signup(ctx context.Context, user model.User) error
+	Signin(ctx context.Context, user model.User) (model.User, error)
+	Google(ctx context.Context, user model.User) (model.User, error)
+	Me(ctx context.Context, user model.User) (model.User, error)
+	UpdateProfile(ctx context.Context, user model.User) error
 }
 
 type PostgresUserRespository struct {
 	Db *gorm.DB
 }
 
-func (r *PostgresUserRespository) Signup(ctx context.Context, user model.User) (model.User, error) {
-	if err := r.Db.WithContext(ctx).Where("email=?", user.Username); err == nil {
-		return model.User{}, errors.New("user already exist")
+func (r *PostgresUserRespository) Signup(ctx context.Context, user model.User) error {
+	if err := r.Db.WithContext(ctx).Where("email=?", user.Email); err == nil {
+		return errors.New("already exist")
 	}
-	if bytes, err := bcrypt.GenerateFromPassword(
-		[]byte(user.Password+config.GetConf().Secret),
-		bcrypt.DefaultCost,
-	); err != nil {
-		return model.User{}, err
+	if bytes, err := bcrypt.GenerateFromPassword([]byte(user.Password+config.GetConf().Secret), bcrypt.DefaultCost); err != nil {
+		return err
 	} else {
 		user.Password = string(bytes)
 	}
 	if err := r.Db.WithContext(ctx).Create(&user).Error; err != nil {
-		return model.User{}, err
+		return err
 	}
-	return user, nil
+	return nil
 }
 
 func (r *PostgresUserRespository) Signin(ctx context.Context, user model.User) (model.User, error) {
 	var u model.User
-	if err := r.Db.WithContext(ctx).Where("username=?", user.Username).First(&u).Error; err != nil {
+	if err := r.Db.WithContext(ctx).Where("email=?", user.Email).First(&u).Error; err != nil {
 		return model.User{}, err
 	}
 	if ok, _ := util.CompareHash(
@@ -57,8 +54,8 @@ func (r *PostgresUserRespository) Signin(ctx context.Context, user model.User) (
 	claims := jwt.MapClaims{
 		"id":    strconv.Itoa(u.ID),
 		"name":  u.Name,
-		"email": u.Username,
-		"exp":   util.GetNow().Add(time.Hour * 8640).Unix(), // 1 year
+		"email": u.Email,
+		"exp":   util.GetNow().Add(time.Hour * 8640).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	t, err := token.SignedString([]byte(config.GetConf().Secret))
@@ -84,17 +81,17 @@ func (r *PostgresUserRespository) Me(ctx context.Context, user model.User) (mode
 	return u, nil
 }
 
-func (r *PostgresUserRespository) UpdateProfile(ctx context.Context, user model.User) (model.User, error) {
+func (r *PostgresUserRespository) UpdateProfile(ctx context.Context, user model.User) error {
 	var u model.User
 	if err := r.Db.WithContext(ctx).Where("id=?", user.ID).Find(&u).Error; err != nil {
-		return model.User{}, err
+		return err
 	}
 	if u.ID == 0 {
-		return model.User{}, errors.New("post not fount")
+		return errors.New("post not fount")
 	}
 	u.Name = user.Name
 	if err := r.Db.WithContext(ctx).Save(&u).Error; err != nil {
-		return model.User{}, err
+		return err
 	}
-	return u, nil
+	return nil
 }

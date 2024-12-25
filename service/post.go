@@ -13,11 +13,11 @@ import (
 
 type PostService interface {
 	CreatePostWithUpdateUser(ctx context.Context, post model.Post) (model.Post, error)
-	GetAllPosts(ctx context.Context) ([]model.Post, error)
-	GetAllPostsAdmin(ctx context.Context, author int) ([]model.Post, error)
-	GetPostByID(ctx context.Context, id int) (model.Post, error)
-	UpdatePost(ctx context.Context, post model.Post) (model.Post, error)
-	DeletePost(ctx context.Context, id int, author int) error
+	GetAll(ctx context.Context) ([]model.Post, error)
+	GetAllAdmin(ctx context.Context, author int) ([]model.Post, error)
+	GetByID(ctx context.Context, id int) (model.Post, error)
+	Update(ctx context.Context, post model.Post) (model.Post, error)
+	Delete(ctx context.Context, id int, author int) error
 }
 
 type PostServiceImpl struct {
@@ -32,30 +32,31 @@ func (s *PostServiceImpl) CreatePostWithUpdateUser(ctx context.Context, post mod
 			tx.Rollback()
 		}
 	}()
-	createPost, err := s.Repo.Create(ctx, post)
+	createPost, err := s.Repo.Create(ctx, tx, post)
 	if err != nil {
 		tx.Rollback()
 		return model.Post{}, err
 	}
-	if err := s.Repo.UpdateUserPostCount(ctx, post.Author); err != nil {
+	if err := s.Repo.UpdateUserPostCount(ctx, tx, post.Author); err != nil {
 		tx.Rollback()
 		return model.Post{}, err
 	}
 	if err := tx.Commit().Error; err != nil {
 		return model.Post{}, err
 	}
+
 	return createPost, nil
 }
 
-func (s *PostServiceImpl) GetAllPosts(ctx context.Context) ([]model.Post, error) {
+func (s *PostServiceImpl) GetAll(ctx context.Context) ([]model.Post, error) {
 	return s.Repo.GetAll(ctx)
 }
 
-func (s *PostServiceImpl) GetAllPostsAdmin(ctx context.Context, author int) ([]model.Post, error) {
+func (s *PostServiceImpl) GetAllAdmin(ctx context.Context, author int) ([]model.Post, error) {
 	return s.Repo.GetAllAdmin(ctx, author)
 }
 
-func (s *PostServiceImpl) GetPostByID(ctx context.Context, id int) (model.Post, error) {
+func (s *PostServiceImpl) GetByID(ctx context.Context, id int) (model.Post, error) {
 	cacheKey := fmt.Sprintf("blogpost:%d", id)
 	cachedPost, err := s.RedisClient.Get(ctx, cacheKey).Result()
 	if err == nil {
@@ -75,7 +76,7 @@ func (s *PostServiceImpl) GetPostByID(ctx context.Context, id int) (model.Post, 
 	return post, nil
 }
 
-func (s *PostServiceImpl) UpdatePost(ctx context.Context, post model.Post) (model.Post, error) {
+func (s *PostServiceImpl) Update(ctx context.Context, post model.Post) (model.Post, error) {
 
 	cacheKey := fmt.Sprintf("blogpost:%d", post.ID)
 	_, err := s.RedisClient.Get(ctx, cacheKey).Result()
@@ -88,7 +89,7 @@ func (s *PostServiceImpl) UpdatePost(ctx context.Context, post model.Post) (mode
 	return s.Repo.Update(ctx, post)
 }
 
-func (s *PostServiceImpl) DeletePost(ctx context.Context, id, author int) error {
+func (s *PostServiceImpl) Delete(ctx context.Context, id, author int) error {
 
 	cacheKey := fmt.Sprintf("blogpost:%d", id)
 	_, err := s.RedisClient.Get(ctx, cacheKey).Result()

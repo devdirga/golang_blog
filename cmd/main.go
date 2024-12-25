@@ -34,24 +34,35 @@ func main() {
 	})
 	defer rdb.Close()
 
-	db.AutoMigrate(&model.Post{})
 	db.AutoMigrate(&model.User{})
+	db.AutoMigrate(&model.Post{})
+	db.AutoMigrate(&model.Comment{})
 
-	postRepo := &repository.PostgresPostRespository{Db: db}
-	postService := &service.PostServiceImpl{Repo: postRepo, RedisClient: rdb}
-	postHandler := handler.NewPostHandler(postService)
 	userRepo := &repository.PostgresUserRespository{Db: db}
 	userService := &service.UserServiceImpl{Repo: userRepo}
 	userHandler := handler.NewUserHandler(userService)
 
+	postRepo := &repository.PostgresPostRespository{Db: db}
+	postService := &service.PostServiceImpl{Repo: postRepo, RedisClient: rdb}
+	postHandler := handler.NewPostHandler(postService)
+
+	commentRepo := &repository.PostgresCommentRespository{Db: db}
+	commentService := &service.CommentServiceImpl{Repo: commentRepo}
+	commentHandler := handler.NewCommentHandler(commentService)
+
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{AllowOrigins: "*"}))
+
 	route.UserRoute(app, userHandler)
 	route.PublicRoute(app, postHandler)
+
 	app.Use(jwtware.New(jwtware.Config{
 		SigningKey: jwtware.SigningKey{Key: []byte(config.GetConf().Secret)},
 	}))
-	route.PostRoute(app, postHandler)
+
 	route.InfoRoute(app, userHandler)
+	route.PostRoute(app, postHandler)
+	route.CommentRoute(app, commentHandler)
+
 	log.Fatal(app.Listen(":5000"))
 }

@@ -9,12 +9,12 @@ import (
 )
 
 type PostRepository interface {
-	Create(ctx context.Context, post model.Post) (model.Post, error)
+	Create(ctx context.Context, tx *gorm.DB, post model.Post) (model.Post, error)
 	GetAll(ctx context.Context) ([]model.Post, error)
 	GetAllAdmin(ctx context.Context, author int) ([]model.Post, error)
 	GetByID(ctx context.Context, id int) (model.Post, error)
 	Update(ctx context.Context, post model.Post) (model.Post, error)
-	UpdateUserPostCount(ctx context.Context, id int) error
+	UpdateUserPostCount(ctx context.Context, tx *gorm.DB, id int) error
 	Delete(ctx context.Context, id int, author int) error
 }
 
@@ -22,8 +22,8 @@ type PostgresPostRespository struct {
 	Db *gorm.DB
 }
 
-func (r *PostgresPostRespository) Create(ctx context.Context, post model.Post) (model.Post, error) {
-	if err := r.Db.WithContext(ctx).Create(&post).Error; err != nil {
+func (r *PostgresPostRespository) Create(ctx context.Context, tx *gorm.DB, post model.Post) (model.Post, error) {
+	if err := tx.WithContext(ctx).Create(&post).Error; err != nil {
 		return model.Post{}, err
 	}
 	return post, nil
@@ -87,6 +87,6 @@ func (r *PostgresPostRespository) Delete(ctx context.Context, id, author int) er
 	return nil
 }
 
-func (r *PostgresPostRespository) UpdateUserPostCount(ctx context.Context, userID int) error {
-	return r.Db.WithContext(ctx).Model(&model.User{}).Where("id=?", userID).Update("post", gorm.Expr("post + ?", 1)).Error
+func (r *PostgresPostRespository) UpdateUserPostCount(ctx context.Context, tx *gorm.DB, userID int) error {
+	return tx.WithContext(ctx).Model(&model.User{}).Where("id=?", userID).Update("post_count", gorm.Expr("post_count + ?", 1)).Error
 }

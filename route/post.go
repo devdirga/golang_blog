@@ -7,9 +7,9 @@ import (
 )
 
 func PostRoute(app *fiber.App, postHandler *handler.PostHandler) {
-	app.Get("/admin/post", postHandler.GetAllPostsAdmin)
-	app.Post("/post", postHandler.CreatePost)
-	app.Get("/post/:id", postHandler.GetBlogByID)
-	app.Put("post/:id", postHandler.UpdatePost)
-	app.Delete("/post/:id", postHandler.DeleteBlog)
+	app.Get("/admin/post", postHandler.GetAllAdmin)
+	app.Post("/post", postHandler.Create)
+	app.Get("/post/:id", postHandler.GetByID)
+	app.Put("post/:id", postHandler.Update)
+	app.Delete("/post/:id", postHandler.Delete)
 }

@@ -23,11 +23,11 @@ func (h *UserHandler) Signup(c *fiber.Ctx) error {
 	if err := c.BodyParser(&user); err != nil {
 		return util.HandleError(c, fiber.StatusBadRequest, "invalid input")
 	}
-	createdPost, err := h.userService.Signup(c.Context(), user)
+	err := h.userService.Signup(c.Context(), user)
 	if err != nil {
 		return util.HandleError(c, fiber.StatusInternalServerError, err.Error())
 	}
-	return c.Status(fiber.StatusCreated).JSON(createdPost)
+	return c.Status(fiber.StatusCreated).JSON(fiber.StatusOK)
 }
 
 func (h *UserHandler) Signin(c *fiber.Ctx) error {
@@ -79,9 +79,9 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 		return util.HandleError(c, fiber.StatusBadRequest, "invalid input")
 	}
 	u.ID = authorID
-	us, err := h.userService.UpdateProfile(c.Context(), u)
+	err := h.userService.UpdateProfile(c.Context(), u)
 	if err != nil {
 		return util.HandleError(c, fiber.StatusInternalServerError, err.Error())
 	}
-	return c.Status(fiber.StatusOK).JSON(us)
+	return c.Status(fiber.StatusOK).JSON(fiber.StatusOK)
 }

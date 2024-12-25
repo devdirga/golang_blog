@@ -35,30 +35,40 @@ func setupTestApp() *fiber.App {
 	}
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     config.GetConf().Redis,
-		Password: "",
+		Password: config.GetConf().RedisPassword,
 		DB:       0,
 	})
 	defer rdb.Close()
-	// migration
-	db.AutoMigrate(&model.Post{})
+
 	db.AutoMigrate(&model.User{})
-	// repo
-	postRepo := &repository.PostgresPostRespository{Db: db}
-	postService := &service.PostServiceImpl{Repo: postRepo, RedisClient: rdb}
-	postHandler := handler.NewPostHandler(postService)
+	db.AutoMigrate(&model.Post{})
+	db.AutoMigrate(&model.Comment{})
+
 	userRepo := &repository.PostgresUserRespository{Db: db}
 	userService := &service.UserServiceImpl{Repo: userRepo}
 	userHandler := handler.NewUserHandler(userService)
 
+	postRepo := &repository.PostgresPostRespository{Db: db}
+	postService := &service.PostServiceImpl{Repo: postRepo, RedisClient: rdb}
+	postHandler := handler.NewPostHandler(postService)
+
+	commentRepo := &repository.PostgresCommentRespository{Db: db}
+	commentService := &service.CommentServiceImpl{Repo: commentRepo}
+	commentHandler := handler.NewCommentHandler(commentService)
+
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{AllowOrigins: "*"}))
+
 	route.UserRoute(app, userHandler)
 	route.PublicRoute(app, postHandler)
+
 	app.Use(jwtware.New(jwtware.Config{
 		SigningKey: jwtware.SigningKey{Key: []byte(config.GetConf().Secret)},
 	}))
-	route.PostRoute(app, postHandler)
+
 	route.InfoRoute(app, userHandler)
+	route.PostRoute(app, postHandler)
+	route.CommentRoute(app, commentHandler)
 
 	return app
 }
@@ -67,7 +77,7 @@ func TestSignup(t *testing.T) {
 	app := setupTestApp()
 	user := model.User{
 		Name:     "ahmad",
-		Username: "ahmad@gmail.com",
+		Email:    "ahmad@gmail.com",
 		Password: "admin123",
 	}
 	body, _ := json.Marshal(user)
@@ -80,7 +90,7 @@ func TestSignup(t *testing.T) {
 func TestSignin(t *testing.T) {
 	app := setupTestApp()
 	post := model.User{
-		Username: "ahmad@gmail.com",
+		Email:    "ahmad@gmail.com",
 		Password: "admin123",
 	}
 	body, _ := json.Marshal(post)
