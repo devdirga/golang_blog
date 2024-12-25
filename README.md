@@ -16,13 +16,22 @@ Manages user profiles, including viewing and editing personal information.
 - `PATCH /updateprofile`: Update user profile.
 
 ### Blog Post
-Implements create, gets, get, update, delete blog post feature, allowing users to get profile.
+Implements create, gets, get, update, delete blog post feature.
 
 **Endpoints:**
 - `GET /post`: Load all data post.
 - `GET /post/:id`: Load one data post.
 - `PUT /post/:id`: Update one data post.
 - `DELETE /post/:id`: Delete one data post.
+
+### Blog Comment
+Implements create, gets, get, update, delete blog comment feature.
+
+**Endpoints:**
+- `GET /commentall`: Load all data comment.
+- `GET /comment/:id`: Load all data comment by post id.
+- `PUT /comment/:id`: Update one data comment.
+- `DELETE /comment/:id`: Delete one data comment (deactivated).
 
 
 ## Instructions on how to run the service
