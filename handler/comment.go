@@ -84,9 +84,9 @@ func (h *CommentHandler) Delete(c *fiber.Ctx) error {
 		return util.HandleError(c, fiber.StatusBadRequest, "invalid id")
 	}
 	var comment model.Comment
-	if err := c.BodyParser(&comment); err != nil {
-		return util.HandleError(c, fiber.StatusBadRequest, "invalid body")
-	}
+	// if err := c.BodyParser(&comment); err != nil {
+	// 	return util.HandleError(c, fiber.StatusBadRequest, "invalid body")
+	// }
 	comment.ID = id
 	comment.UserID = userID
 	err = h.commentService.Delete(c.Context(), comment)

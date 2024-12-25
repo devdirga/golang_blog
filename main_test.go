@@ -171,6 +171,15 @@ func TestPostDelete(t *testing.T) {
 	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
 
+func TestCommentGet(t *testing.T) {
+	app := setupTestApp()
+	req := httptest.NewRequest(http.MethodGet, "/commentall", nil)
+	req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRpcmdhQGdtYWlsLmNvbSIsImV4cCI6MTc2NjIyMTMzMSwiaWQiOiIyIiwibmFtZSI6IkRpcmdhbnRhcmEifQ.4G1O1g63P7OOogx3Mu9OQdmUezTO2x-zUX6PbYA4g10")
+	req.Header.Set("Content-Type", "application/json")
+	resp, _ := app.Test(req)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
 func TestCommentCreate(t *testing.T) {
 	app := setupTestApp()
 	post := model.Comment{
@@ -193,6 +202,15 @@ func TestCommentUpdate(t *testing.T) {
 	}
 	body, _ := json.Marshal(post)
 	req := httptest.NewRequest(http.MethodPut, "/comment/2", bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRpcmdhQGdtYWlsLmNvbSIsImV4cCI6MTc2NjIyMTMzMSwiaWQiOiIyIiwibmFtZSI6IkRpcmdhbnRhcmEifQ.4G1O1g63P7OOogx3Mu9OQdmUezTO2x-zUX6PbYA4g10")
+	req.Header.Set("Content-Type", "application/json")
+	resp, _ := app.Test(req)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestCommentDelete(t *testing.T) {
+	app := setupTestApp()
+	req := httptest.NewRequest(http.MethodDelete, "/comment/2", nil)
 	req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRpcmdhQGdtYWlsLmNvbSIsImV4cCI6MTc2NjIyMTMzMSwiaWQiOiIyIiwibmFtZSI6IkRpcmdhbnRhcmEifQ.4G1O1g63P7OOogx3Mu9OQdmUezTO2x-zUX6PbYA4g10")
 	req.Header.Set("Content-Type", "application/json")
 	resp, _ := app.Test(req)
